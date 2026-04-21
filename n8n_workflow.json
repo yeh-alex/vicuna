@@ -1,0 +1,183 @@
+{
+  "name": "Vicuna LoRA 再購預測",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-manual",
+      "name": "手動觸發",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "benevolence",
+              "name": "benevolence",
+              "value": 6,
+              "type": "number"
+            },
+            {
+              "id": "integrity",
+              "name": "integrity",
+              "value": 8,
+              "type": "number"
+            },
+            {
+              "id": "competence",
+              "name": "competence",
+              "value": 15,
+              "type": "number"
+            },
+            {
+              "id": "trust",
+              "name": "trust",
+              "value": 4.2,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-data",
+      "name": "設定預測資料",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/predict",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ benevolence: $json.benevolence, integrity: $json.integrity, competence: $json.competence, trust: $json.trust }) }}",
+        "options": {}
+      },
+      "id": "http-predict",
+      "name": "呼叫預測 API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-purchase",
+              "leftValue": "={{ $json.prediction }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-purchase",
+      "name": "判斷是否再購",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "your-email@gmail.com",
+        "toEmail": "your-email@gmail.com",
+        "subject": "=🟢 再購預測結果：客戶預測會再購！",
+        "emailType": "text",
+        "message": "=再購預測結果通知\n=====================\n\n預測結果：✅ 會再購 (Purchase)\n\n輸入數值：\n- Benevolence (善意度): {{ $json.benevolence }}\n- Integrity (誠信度): {{ $json.integrity }}\n- Competence (能力度): {{ $json.competence }}\n- Trust (信任度): {{ $json.trust }}\n\n原始輸出：{{ $json.raw_output }}\n\n---\n此訊息由 Vicuna LoRA 再購預測系統自動發送。",
+        "options": {}
+      },
+      "id": "email-purchase",
+      "name": "發送 Email (會再購)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "your-email@gmail.com",
+        "toEmail": "your-email@gmail.com",
+        "subject": "=🔴 再購預測結果：客戶預測不會再購",
+        "emailType": "text",
+        "message": "=再購預測結果通知\n=====================\n\n預測結果：❌ 不會再購 (Not Purchase)\n\n輸入數值：\n- Benevolence (善意度): {{ $json.benevolence }}\n- Integrity (誠信度): {{ $json.integrity }}\n- Competence (能力度): {{ $json.competence }}\n- Trust (信任度): {{ $json.trust }}\n\n原始輸出：{{ $json.raw_output }}\n\n---\n此訊息由 Vicuna LoRA 再購預測系統自動發送。",
+        "options": {}
+      },
+      "id": "email-not-purchase",
+      "name": "發送 Email (不會再購)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1100, 400]
+    }
+  ],
+  "connections": {
+    "手動觸發": {
+      "main": [
+        [
+          {
+            "node": "設定預測資料",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "設定預測資料": {
+      "main": [
+        [
+          {
+            "node": "呼叫預測 API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "呼叫預測 API": {
+      "main": [
+        [
+          {
+            "node": "判斷是否再購",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判斷是否再購": {
+      "main": [
+        [
+          {
+            "node": "發送 Email (會再購)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "發送 Email (不會再購)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

@@ -1,0 +1,26 @@
+# Virtual environment
+venv/
+
+# Model weights (too large for git)
+vicuna_bict_lora_model/
+vicuna_bict_lora_model_v2/
+vicuna_final_lora_model/
+lora_checkpoints_0325/
+lora_checkpoints_bict/
+lora_checkpoints_bict_v2/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Temporary files
+*.tmp
+plot_results.py
+
+# OS files
+Thumbs.db
+.DS_Store

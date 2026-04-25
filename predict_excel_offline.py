@@ -44,9 +44,7 @@ def build_prompt(benevolence: float, integrity: float, competence: float, trust:
                 f"Trust is a composite score derived from these three dimensions. "
                 f"Analyze the following values: "
                 f"Benevolence: {benevolence}, "
-                f"Integrity: {integrity}, "
                 f"Competence: {competence}, "
-                f"Trust: {round(trust, 4)}. "
                 f"Predict if this user will purchase again. "
                 f"Output '1' if the user will buy again, or '0' if they will not. "
                 f"Answer with ONLY the number (0 or 1)."
@@ -91,6 +89,7 @@ def main():
         bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=torch.float16,
         bnb_4bit_use_double_quant=True,
+        llm_int8_enable_fp32_cpu_offload=True
     )
     base_model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,

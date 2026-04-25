@@ -10,7 +10,7 @@ from peft import PeftModel
 from tqdm import tqdm
 
 MODEL_ID = "lmsys/vicuna-7b-v1.5"
-LORA_PATH = "./vicuna_bict_lora_model_v2"
+LORA_PATH = "./lora_checkpoints_0325/checkpoint-150"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 VICUNA_TEMPLATE = (
@@ -46,7 +46,7 @@ def build_prompt(benevolence: float, integrity: float, competence: float, trust:
                 f"Benevolence: {benevolence}, "
                 f"Integrity: {integrity}, "
                 f"Competence: {competence}, "
-                f"Trust: {trust}. "
+                f"Trust: {round(trust, 4)}. "
                 f"Predict if this user will purchase again. "
                 f"Output '1' if the user will buy again, or '0' if they will not. "
                 f"Answer with ONLY the number (0 or 1)."

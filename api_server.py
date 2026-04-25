@@ -32,7 +32,7 @@ from peft import PeftModel
 # 設定
 # ============================================================
 MODEL_ID = "lmsys/vicuna-7b-v1.5"
-LORA_PATH = "./vicuna_bict_lora_model_v2"
+LORA_PATH = "./lora_checkpoints_0325/checkpoint-150"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # 全域變數（在 lifespan 中初始化）
@@ -80,7 +80,7 @@ def build_prompt(benevolence: float, integrity: float, competence: float, trust:
                 f"Benevolence: {benevolence}, "
                 f"Integrity: {integrity}, "
                 f"Competence: {competence}, "
-                f"Trust: {trust}. "
+                f"Trust: {round(trust, 4)}. "
                 f"Predict if this user will purchase again. "
                 f"Output '1' if the user will buy again, or '0' if they will not. "
                 f"Answer with ONLY the number (0 or 1)."
@@ -246,6 +246,17 @@ class BatchPredictResponse(BaseModel):
     purchase_count: int = Field(..., description="預測會再購的筆數")
     not_purchase_count: int = Field(..., description="預測不會再購的筆數")
 
+class PowerBIRequest(BaseModel):
+    customer_id: str = Field(..., description="要呼叫的客戶代號 (ID)")
+    report_url: str = Field(
+        "https://app.powerbi.com/groups/me/reports/YOUR_REPORT_ID/ReportSection", 
+        description="PowerBI 網頁版連結"
+    )
+    table_name: str = Field(
+        "master_sales_demo_ready", 
+        description="PowerBI 內的 Dataset 資料表名稱"
+    )
+
 
 # ============================================================
 # API Endpoints
@@ -344,6 +355,24 @@ async def predict_from_excel(file: UploadFile = File(...)):
         "not_purchase_count": len(results) - purchase_count,
         "filename": file.filename
     }
+
+
+@app.post("/open_powerbi", tags=["整合"])
+async def open_powerbi_report(request: PowerBIRequest):
+    """
+    接收 n8n 傳來的客戶 ID，並自動拼接 PowerBIDashboard 的 URL 參數 (filter)，
+    接著在本機預設瀏覽器中彈出該已過濾特定客人的資料表畫面。
+    """
+    import webbrowser
+    
+    # 組合 PowerBI filter 參數 (注意如果 ID 裡面沒有特殊符號，可以直接用字串)
+    # 格式 ?filter=TableName/ColumnName eq 'Value'
+    target_url = f"{request.report_url}?filter={request.table_name}/客戶代號 eq '{request.customer_id}'"
+    
+    # 呼叫系統預設瀏覽器打開這段帶有參數過濾條件的連結
+    webbrowser.open(target_url)
+    
+    return {"status": "success", "opened_url": target_url}
 
 
 # ============================================================
